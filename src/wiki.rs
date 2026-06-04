@@ -72,15 +72,18 @@ async fn is_article_relevant(query: &str) -> Result<bool, Error> {
 
     let res = wiki.get_query_api_json_all(&params).await?;
 
+    println!("DEBUG: API response for {}: {:?}", query, res);
     for page in res["query"]["pages"]
         .as_object()
         .ok_or(Error::WikiData("query.pages"))?
         .values()
     {
         let title = page["title"].as_str().ok_or(Error::WikiData("query.pages[].title"))?;
+        println!("DEBUG: Page title: {}", title);
         if title == query
             && let Some(categories) = page["categories"].as_array()
         {
+            println!("DEBUG: Categories: {:?}", categories);
             for category in categories {
                 let category_name = category["title"]
                     .as_str()
@@ -491,7 +494,7 @@ impl WikiCacheEntry {
 
         let wikitext = wikitext_parser::parse_wikitext(raw_wikitext, article, |e| {
             out.malformed = true;
-            println!("  Error: {}", e);
+            eprintln!("  Malformed wikitext in '{}': {}", &article, e);
         });
 
         for template in wikitext.list_double_brace_expressions() {
@@ -686,7 +689,7 @@ impl WikiPath {
     }
 
     pub fn incorporate_text(&mut self, text: &str) {
-        if text.contains(['<', '>']) {
+        if (text.contains('<') || text.contains('>')) && !text.contains("<base>") && !text.contains("<game>") && !text.contains("<root>") && !text.contains("<home>") && !text.contains("<storeGameId>") && !text.contains("<storeUserId>") && !text.contains("<osUserName>") && !text.contains("<winAppData>") && !text.contains("<winLocalAppData>") && !text.contains("<winLocalAppDataLow>") && !text.contains("<winDocuments>") && !text.contains("<winPublic>") && !text.contains("<winProgramData>") && !text.contains("<winDir>") && !text.contains("<xdgData>") && !text.contains("<xdgConfig>") {
             self.regularity = Regularity::Irregular;
         } else {
             self.composite += text;

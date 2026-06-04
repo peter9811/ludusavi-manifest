@@ -219,7 +219,7 @@ pub async fn run(
             let mut malformed = false;
             wikitext_parser::parse_wikitext(&content, "Test".to_string(), |e| {
                 malformed = true;
-                dbg!(e);
+                eprintln!("Error parsing wikitext: {e:?}");
             });
 
             if malformed {
